@@ -19,6 +19,7 @@ public sealed class FidelityParser : IStatementParser
         var reader = new CsvRowReader();
         var account = new AccountRef("Fidelity", ctx.AccountId, "Brokerage");
         var transactions = new List<NormalizedTransaction>();
+        var securities = new Dictionary<string, SecurityRef>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var row in reader.ReadRows(input.Content))
         {
@@ -33,6 +34,8 @@ public sealed class FidelityParser : IStatementParser
             var action = FidelityActionMap.Normalize(Get(row, "Action"));
             var symbol = (Get(row, "Symbol") ?? "").Trim();
             var security = ctx.SecurityResolver.ResolveFromRow(row);
+            if (security is not null && !securities.ContainsKey(security.Id))
+                securities[security.Id] = security;
 
             var units = TryParseDecimal(Get(row, "Quantity"));
             var unitPrice = TryParseDecimal(Get(row, "Price"));
@@ -55,7 +58,7 @@ public sealed class FidelityParser : IStatementParser
                 FitId: fitid
             ));
         }
-        return new ParseResult(account, transactions);
+        return new ParseResult(account, transactions, securities.Values.ToList());
     }
 
     private static string? Get(IDictionary<string, string?> row, string key)
