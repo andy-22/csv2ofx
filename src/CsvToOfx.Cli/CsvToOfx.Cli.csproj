@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\CsvToOfx.Core\CsvToOfx.Core.csproj" />
+    <ProjectReference Include="..\CsvToOfx.Parsers\CsvToOfx.Parsers.csproj" />
+    <ProjectReference Include="..\CsvToOfx.Writers.Ofx\CsvToOfx.Writers.Ofx.csproj" />
+    <ProjectReference Include="..\CsvToOfx.Writers.Qif\CsvToOfx.Writers.Qif.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
