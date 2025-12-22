@@ -11,7 +11,7 @@ on:
     branches: [ "main" ]
 
 env:
-  VERSION: ${{ github.ref_type == 'tag' && startsWith(github.ref_name, 'v') && github.ref_name || '0.0.0-local' }}
+  VERSION: 0.0.0-local
 
 jobs:
   test:
@@ -22,6 +22,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - name: Set version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="0.0.0-local"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
       - name: Restore
         run: dotnet restore
       - name: Build
@@ -41,6 +49,14 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - name: Set version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          else
+            VERSION="0.0.0-local"
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
       - name: Publish self-contained single file
         run: dotnet publish src/CsvToOfx.Cli/CsvToOfx.Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true /p:PublishSingleFile=true /p:IncludeAllContentForSelfExtract=true /p:Version=${{ env.VERSION }}
       - name: Archive artifact
