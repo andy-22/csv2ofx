@@ -17,10 +17,26 @@ public sealed class CsvRowReader
     {
         using var reader = new StreamReader(csv);
         using var csvr = new CsvReader(reader, _conf);
+
+        var seenData = false;
         while (csvr.Read())
         {
             var dict = csvr.GetRecord<dynamic>() as IDictionary<string, object>;
-            yield return dict!.ToDictionary(k => k.Key, v => v.Value?.ToString());
+            if (dict is null) continue;
+
+            var converted = dict.ToDictionary(k => k.Key, v => v.Value?.ToString());
+            var nonEmpty = converted.Values.Count(v => !string.IsNullOrWhiteSpace(v));
+
+            if (nonEmpty == 0)
+            {
+                if (seenData)
+                    yield break; // blank row after data marks start of disclaimer/footer
+
+                continue; // skip leading blank lines
+            }
+
+            seenData = true;
+            yield return converted;
         }
     }
 }
