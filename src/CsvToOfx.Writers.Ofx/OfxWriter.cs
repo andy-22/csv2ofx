@@ -1,4 +1,3 @@
-
 using System.Text;
 using CsvToOfx.Core.Models;
 
@@ -104,6 +103,10 @@ namespace CsvToOfx.Writers.Ofx
             sb.AppendLine("      </INVSTMTRS>");
             sb.AppendLine("    </INVSTMTTRNRS>");
             sb.AppendLine("  </INVSTMTMSGSRSV1>");
+
+            if (includeSecurityList)
+                WriteSecListMessageSet(sb, result);
+
             sb.AppendLine("</OFX>");
 
             return sb.ToString();
@@ -128,6 +131,27 @@ namespace CsvToOfx.Writers.Ofx
             sb.AppendLine($"              <UNIQUEID>{Escape(s.Id)}</UNIQUEID>");
             sb.AppendLine($"              <UNIQUEIDTYPE>{idType}</UNIQUEIDTYPE>");
             sb.AppendLine("            </SECID>");
+        }
+
+        private static void WriteSecListMessageSet(StringBuilder sb, ParseResult result)
+        {
+            if (result.Securities is null || result.Securities.Count == 0) return;
+            sb.AppendLine("  <SECLISTMSGSRSV1>");
+            sb.AppendLine("    <SECLIST>");
+            foreach (var s in result.Securities)
+            {
+                sb.AppendLine("      <STOCKINFO>");
+                sb.AppendLine("        <SECINFO>");
+                WriteSecId(sb, s);
+                if (!string.IsNullOrWhiteSpace(s.Name))
+                    sb.AppendLine($"          <SECNAME>{Escape(s.Name)}</SECNAME>");
+                if (!string.IsNullOrWhiteSpace(s.Ticker))
+                    sb.AppendLine($"          <TICKER>{Escape(s.Ticker)}</TICKER>");
+                sb.AppendLine("        </SECINFO>");
+                sb.AppendLine("      </STOCKINFO>");
+            }
+            sb.AppendLine("    </SECLIST>");
+            sb.AppendLine("  </SECLISTMSGSRSV1>");
         }
 
         private static void WriteSubacct(StringBuilder sb, NormalizedTransaction t)
