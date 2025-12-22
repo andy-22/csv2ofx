@@ -15,19 +15,41 @@ namespace CsvToOfx.Core.Services
         public SecurityRef? ResolveFromRow(IDictionary<string, string?> row)
         {
             if (!row.TryGetValue("Symbol", out var tickerRaw)) return null;
-            var ticker = tickerRaw?.Trim();
-            if (string.IsNullOrEmpty(ticker)) return null;
+            var symbol = tickerRaw?.Trim();
+            if (string.IsNullOrEmpty(symbol)) return null;
 
-            if (_preferCusip && SecurityMap.TryGetByTicker(ticker, out var mapped))
+            // Prefer mapped CUSIP when symbol is a ticker we recognize
+            if (_preferCusip && SecurityMap.TryGetByTicker(symbol, out var mapped))
             {
-                var name = string.IsNullOrWhiteSpace(mapped.Name) ? ticker : $"{mapped.Name} ({ticker})";
-                return new SecurityRef(mapped.Cusip, IdType.Cusip, name, ticker);
+                var mappedName = string.IsNullOrWhiteSpace(mapped.Name) ? symbol : $"{mapped.Name} ({symbol})";
+                return new SecurityRef(mapped.Cusip, IdType.Cusip, mappedName, symbol);
             }
 
+            // Fallback: build name from provided fields (Security Name or Description)
             row.TryGetValue("Security Name", out var nameRaw);
-            var nameFallback = nameRaw?.Trim();
-            var displayName = string.IsNullOrWhiteSpace(nameFallback) ? ticker : $"{nameFallback} ({ticker})";
-            return new SecurityRef(ticker, IdType.Ticker, displayName, ticker);
+            row.TryGetValue("Description", out var descRaw);
+            var nameBase = (descRaw ?? nameRaw)?.Trim();
+            if (string.IsNullOrWhiteSpace(nameBase)) nameBase = symbol;
+
+            // Only append ticker when it adds information
+            var displayName = nameBase;
+            if (!string.IsNullOrWhiteSpace(symbol) && !string.Equals(nameBase, symbol, StringComparison.OrdinalIgnoreCase))
+                displayName = $"{nameBase} ({symbol})";
+
+            var idType = LooksLikeCusip(symbol) ? IdType.Cusip : IdType.Ticker;
+            var tickerField = idType == IdType.Ticker ? symbol : null;
+            return new SecurityRef(symbol, idType, displayName, tickerField);
+        }
+
+        private static bool LooksLikeCusip(string value)
+        {
+            if (value.Length != 9) return false;
+            for (int i = 0; i < value.Length; i++)
+            {
+                var c = value[i];
+                if (!char.IsLetterOrDigit(c)) return false;
+            }
+            return true;
         }
     }
 }

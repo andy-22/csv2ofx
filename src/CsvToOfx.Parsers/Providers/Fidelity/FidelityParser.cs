@@ -34,8 +34,26 @@ public sealed class FidelityParser : IStatementParser
             var action = FidelityActionMap.Normalize(Get(row, "Action"));
             var symbol = (Get(row, "Symbol") ?? "").Trim();
             var security = ctx.SecurityResolver.ResolveFromRow(row);
-            if (security is not null && !securities.ContainsKey(security.Id))
-                securities[security.Id] = security;
+            if (security is not null)
+            {
+                if (!securities.TryGetValue(security.Id, out var existing))
+                {
+                    securities[security.Id] = security;
+                }
+                else
+                {
+                    var name = !string.IsNullOrWhiteSpace(security.Name) ? security.Name : existing.Name;
+                    // if existing name is just the ID/CUSIP, prefer incoming name even if equal length
+                    if (!string.IsNullOrWhiteSpace(security.Name) && string.Equals(existing.Name, existing.Id, StringComparison.OrdinalIgnoreCase))
+                        name = security.Name;
+
+                    var ticker = !string.IsNullOrWhiteSpace(existing.Ticker) ? existing.Ticker : security.Ticker;
+                    if (string.IsNullOrWhiteSpace(ticker))
+                        ticker = security.Ticker;
+
+                    securities[security.Id] = existing with { Name = name, Ticker = ticker };
+                }
+            }
 
             var units = TryParseDecimal(Get(row, "Quantity"));
             var unitPrice = TryParseDecimal(Get(row, "Price"));
