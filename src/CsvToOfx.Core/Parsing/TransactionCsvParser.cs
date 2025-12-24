@@ -38,37 +38,40 @@ public sealed class TransactionCsvParser
         if (!csv.Read() || !csv.ReadHeader())
             yield break;
 
-        var indexMap = BuildIndexMap(csv.HeaderRecord);
-        if (indexMap.Count == 0)
-            yield break;
-
-        while (csv.Read())
+        if (csv.HeaderRecord != null)
         {
-            if (string.IsNullOrWhiteSpace(csv.Parser.RawRecord))
-                continue;
+            var indexMap = BuildIndexMap(csv.HeaderRecord);
+            if (indexMap.Count == 0)
+                yield break;
 
-            DateTime tradeDate = csv.GetField<DateTime>(indexMap[CanonicalField.TradeDate]);
-            var action = _actionResolver.Resolve(csv.GetField(indexMap[CanonicalField.Action]));
-            var security = ResolveSecurity(csv, indexMap);
-            decimal? units = GetOptional<decimal>(csv, indexMap, CanonicalField.Quantity);
-            decimal? price = GetOptional<decimal>(csv, indexMap, CanonicalField.Price);
-            decimal amount = csv.GetField<decimal>(indexMap[CanonicalField.Amount]);
-            string currency = GetOptional<string>(csv, indexMap, CanonicalField.Currency) ?? "USD";
-            string? memo = GetOptional<string>(csv, indexMap, CanonicalField.Description);
-            decimal? fees = GetOptional<decimal>(csv, indexMap, CanonicalField.Fees);
-            string? fitId = null;
+            while (csv.Read())
+            {
+                if (string.IsNullOrWhiteSpace(csv.Parser.RawRecord))
+                    continue;
 
-            yield return new NormalizedTransaction(
-                tradeDate,
-                action,
-                security,
-                units,
-                price,
-                amount,
-                currency,
-                memo,
-                fees,
-                fitId);
+                DateTime tradeDate = csv.GetField<DateTime>(indexMap[CanonicalField.TradeDate]);
+                var action = _actionResolver.Resolve(csv.GetField(indexMap[CanonicalField.Action]));
+                var security = ResolveSecurity(csv, indexMap);
+                decimal? units = GetOptional<decimal>(csv, indexMap, CanonicalField.Quantity);
+                decimal? price = GetOptional<decimal>(csv, indexMap, CanonicalField.Price);
+                decimal amount = csv.GetField<decimal>(indexMap[CanonicalField.Amount]);
+                string currency = GetOptional<string>(csv, indexMap, CanonicalField.Currency) ?? "USD";
+                string? memo = GetOptional<string>(csv, indexMap, CanonicalField.Description);
+                decimal? fees = GetOptional<decimal>(csv, indexMap, CanonicalField.Fees);
+                string? fitId = null;
+
+                yield return new NormalizedTransaction(
+                    tradeDate,
+                    action,
+                    security,
+                    units,
+                    price,
+                    amount,
+                    currency,
+                    memo,
+                    fees,
+                    fitId);
+            }
         }
     }
 
@@ -99,7 +102,13 @@ public sealed class TransactionCsvParser
         if (!indexMap.TryGetValue(CanonicalField.Symbol, out var idx))
             return null;
         var symbol = csv.GetField(idx);
-        return _securityResolver.Resolve(symbol);
+        if (symbol != null) 
+            return _securityResolver.Resolve(symbol);
+        else
+        {
+            return null;
+        }
+        
     }
 }
 
