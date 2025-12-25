@@ -1,9 +1,10 @@
 // C#
 using CsvToOfx.Core.Models;
+using CsvToOfx.Core.Parsing;
 
 namespace CsvToOfx.Core.Services
 {
-    public sealed class SecurityResolver
+    public sealed class SecurityResolver : ISecurityResolver
     {
         private readonly bool _preferCusip;
 
@@ -39,6 +40,16 @@ namespace CsvToOfx.Core.Services
             var idType = LooksLikeCusip(symbol) ? IdType.Cusip : IdType.Ticker;
             var tickerField = idType == IdType.Ticker ? symbol : null;
             return new SecurityRef(symbol, idType, displayName, tickerField);
+        }
+
+        public SecurityRef? Resolve(string symbol)
+        {
+            if (string.IsNullOrWhiteSpace(symbol)) return null;
+            var row = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Symbol"] = symbol
+            };
+            return ResolveFromRow(row);
         }
 
         private static bool LooksLikeCusip(string value)
