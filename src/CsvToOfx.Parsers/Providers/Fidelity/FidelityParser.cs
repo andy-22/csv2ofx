@@ -21,7 +21,7 @@ public sealed class FidelityParser : IStatementParser
         var transactions = new List<NormalizedTransaction>();
         var securities = new Dictionary<string, SecurityRef>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var row in reader.ReadRows(input.Content))
+        foreach (var row in reader.ReadRows(input.Content, RequiredFields))
         {
             // skip empty rows
             var nonEmpty = row.Values.Count(v => !string.IsNullOrWhiteSpace(v));
