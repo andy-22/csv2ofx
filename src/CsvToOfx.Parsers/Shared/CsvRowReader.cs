@@ -7,32 +7,30 @@ public sealed class CsvRowReader
 {
     private readonly CsvConfiguration _conf = new(CultureInfo.InvariantCulture)
     {
-        HasHeaderRecord = true,
+        HasHeaderRecord = false,
         DetectColumnCountChanges = false,
         BadDataFound = null,
         TrimOptions = TrimOptions.Trim
     };
 
-    public IEnumerable<IDictionary<string,string?>> ReadRows(Stream csv)
+    public IEnumerable<IDictionary<string,string?>> ReadRows(Stream csv, IEnumerable<string>? requiredHeaders = null)
     {
         using var reader = new StreamReader(csv);
         using var csvr = new CsvReader(reader, _conf);
 
+        string[]? headerRecord = null;
         var seenData = false;
+        var requiredHeaderSet = requiredHeaders is null
+            ? null
+            : new HashSet<string>(requiredHeaders, StringComparer.OrdinalIgnoreCase);
+
         while (csvr.Read())
         {
-            var colCount = csvr.Parser.Count;
-            if (colCount == 0) continue; // skip empty physical rows
-
-            var dict = csvr.GetRecord<dynamic>() as IDictionary<string, object>;
-            if (dict is null) continue;
-
-            // drop rows that don't match header shape (e.g., disclaimers/footers)
-            if (csvr.HeaderRecord is { Length: > 0 } && colCount < csvr.HeaderRecord.Length)
+            var record = csvr.Parser.Record;
+            if (record is null || record.Length == 0)
                 continue;
 
-            var converted = dict.ToDictionary(k => k.Key, v => v.Value?.ToString());
-            var nonEmpty = converted.Values.Count(v => !string.IsNullOrWhiteSpace(v));
+            var nonEmpty = record.Count(v => !string.IsNullOrWhiteSpace(v));
 
             if (nonEmpty == 0)
             {
@@ -42,8 +40,41 @@ public sealed class CsvRowReader
                 continue; // skip leading blank lines
             }
 
+            if (headerRecord is null)
+            {
+                if (!MatchesHeader(record, requiredHeaderSet))
+                    continue;
+
+                headerRecord = record.Select(v => v?.Trim() ?? string.Empty).ToArray();
+                continue;
+            }
+
+            // drop rows that don't match header shape (e.g., disclaimers/footers)
+            if (record.Length < headerRecord.Length)
+                continue;
+
+            var converted = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+            for (var i = 0; i < headerRecord.Length; i++)
+                converted[headerRecord[i]] = i < record.Length ? record[i] : null;
+
             seenData = true;
             yield return converted;
         }
+    }
+
+    private static bool MatchesHeader(string[] record, HashSet<string>? requiredHeaders)
+    {
+        var normalized = record
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (normalized.Count == 0)
+            return false;
+
+        if (requiredHeaders is null || requiredHeaders.Count == 0)
+            return true;
+
+        return requiredHeaders.IsSubsetOf(normalized);
     }
 }
