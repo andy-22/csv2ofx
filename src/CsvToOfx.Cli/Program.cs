@@ -1,5 +1,4 @@
-﻿
-using CsvToOfx.Core.Models;
+﻿using CsvToOfx.Core.Models;
 using CsvToOfx.Core.Services;
 using CsvToOfx.Parsers.Abstractions;
 using CsvToOfx.Writers.Ofx;
@@ -8,16 +7,19 @@ using Microsoft.Extensions.DependencyInjection;
 // -------------------------------
 // 1) DI container
 // -------------------------------
+var preferCusip = true;
+var securityArg = GetArg("security-id-type", args);
+if (!string.IsNullOrWhiteSpace(securityArg) && securityArg.Equals("ticker", StringComparison.OrdinalIgnoreCase))
+    preferCusip = false;
+
 var services = new ServiceCollection()
     // Core services (make sure these exist in CsvToOfx.Core/Services)
     .AddSingleton<DateParser>()
     .AddSingleton<AmountParser>()
     .AddSingleton<FitIdGenerator>()
     .AddSingleton<SubacctResolver>()
-    .AddSingleton<OutputPathService>()                 // <-- MISSING previously
-    .AddSingleton<SecurityResolver>(_ =>
-        // TODO: load a real ticker->CUSIP map later; empty for now
-        new SecurityResolver(new Dictionary<string, string>()))
+    .AddSingleton<OutputPathService>()
+    .AddSingleton<SecurityResolver>(_ => new SecurityResolver(preferCusip))
     // Writers
     .AddSingleton<IOfxWriter, OfxWriter>()
     .BuildServiceProvider();
