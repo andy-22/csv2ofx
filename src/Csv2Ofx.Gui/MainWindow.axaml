@@ -1,0 +1,156 @@
+<Window
+    x:Class="Csv2Ofx.Gui.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Csv2Ofx"
+    Width="860"
+    Height="620"
+    MinWidth="720"
+    MinHeight="560"
+    Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="28" RowSpacing="24">
+    <StackPanel Spacing="6">
+      <TextBlock
+          Text="Csv2Ofx"
+          FontSize="30"
+          FontWeight="SemiBold" />
+      <TextBlock
+          Text="Convert investment CSV exports into OFX files."
+          FontSize="14"
+          Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+    </StackPanel>
+
+    <Border
+        Grid.Row="1"
+        Padding="24"
+        Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+        BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+        BorderThickness="1"
+        CornerRadius="6">
+      <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" ColumnDefinitions="180,*,Auto" RowSpacing="18" ColumnSpacing="12">
+        <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Text="CSV file"
+            FontWeight="SemiBold" />
+        <TextBox
+            x:Name="CsvPathTextBox"
+            Grid.Row="0"
+            Grid.Column="1"
+            IsReadOnly="True"
+            PlaceholderText="Choose a CSV file" />
+        <Button
+            x:Name="BrowseCsvButton"
+            Grid.Row="0"
+            Grid.Column="2"
+            MinWidth="96"
+            Click="BrowseCsvButton_OnClick"
+            Content="Browse" />
+
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Text="Statement kind"
+            FontWeight="SemiBold" />
+        <ComboBox
+            x:Name="KindComboBox"
+            Grid.Row="1"
+            Grid.Column="1"
+            MinWidth="220"
+            HorizontalAlignment="Left"
+            SelectionChanged="Input_OnChanged" />
+
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Text="Account name"
+            FontWeight="SemiBold" />
+        <TextBox
+            x:Name="AccountNameTextBox"
+            Grid.Row="2"
+            Grid.Column="1"
+            PlaceholderText="Example: Fidelity Brokerage"
+            TextChanged="TextInput_OnChanged" />
+
+        <TextBlock
+            Grid.Row="3"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            Text="OFX folder"
+            FontWeight="SemiBold" />
+        <TextBox
+            x:Name="OutputFolderTextBox"
+            Grid.Row="3"
+            Grid.Column="1"
+            PlaceholderText="Defaults to the CSV folder"
+            TextChanged="TextInput_OnChanged" />
+        <Button
+            x:Name="BrowseOutputButton"
+            Grid.Row="3"
+            Grid.Column="2"
+            MinWidth="96"
+            Click="BrowseOutputButton_OnClick"
+            Content="Browse" />
+
+        <TextBlock
+            Grid.Row="4"
+            Grid.Column="0"
+            VerticalAlignment="Top"
+            Text="Output file"
+            FontWeight="SemiBold" />
+        <TextBlock
+            x:Name="OutputPreviewTextBlock"
+            Grid.Row="4"
+            Grid.Column="1"
+            Grid.ColumnSpan="2"
+            TextWrapping="Wrap"
+            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+
+        <Border
+            Grid.Row="5"
+            Grid.ColumnSpan="3"
+            Padding="18"
+            Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"
+            BorderThickness="1"
+            CornerRadius="6">
+          <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="10" ColumnSpacing="16">
+            <StackPanel Spacing="4">
+              <TextBlock
+                  Text="Ready to convert"
+                  FontSize="18"
+                  FontWeight="SemiBold" />
+              <TextBlock
+                  x:Name="StatusTextBlock"
+                  Text="Choose a CSV file, fill in the account name, and convert."
+                  TextWrapping="Wrap"
+                  Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+            </StackPanel>
+            <Button
+                x:Name="ConvertButton"
+                Grid.Column="1"
+                MinWidth="132"
+                VerticalAlignment="Center"
+                Click="ConvertButton_OnClick"
+                Content="Convert" />
+            <ProgressBar
+                x:Name="ConversionProgressBar"
+                Grid.Row="1"
+                Grid.ColumnSpan="2"
+                IsIndeterminate="True"
+                IsVisible="False" />
+          </Grid>
+        </Border>
+      </Grid>
+    </Border>
+
+    <TextBlock
+        Grid.Row="2"
+        Text="Current parser: Fidelity investment CSV. Bank and card profiles can be added without changing this screen layout."
+        FontSize="12"
+        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+  </Grid>
+</Window>
