@@ -15,7 +15,7 @@ EXECUTABLE="Csv2Ofx.Gui"
 APP_ID="com.csv2ofx.gui"
 APPDIR="$OUTPUT_DIR/$APP_NAME.AppDir"
 APPIMAGE_TOOL="$OUTPUT_DIR/appimagetool-x86_64.AppImage"
-APPIMAGE_PATH="$OUTPUT_DIR/$APP_NAME-$VERSION-linux-x64.AppImage"
+APPIMAGE_PATH="$OUTPUT_DIR/$APP_NAME-Gui-$VERSION-linux-x64.AppImage"
 
 rm -rf "$APPDIR"
 mkdir -p \

@@ -104,7 +104,7 @@ jobs:
         run: |
           mkdir -p artifacts/packages
           cd artifacts/publish/${{ matrix.rid }}
-          zip -r ../../packages/Csv2Ofx-${{ env.VERSION }}-${{ matrix.rid }}.zip .
+          zip -r ../../packages/Csv2Ofx-Gui-${{ env.VERSION }}-${{ matrix.rid }}.zip .
       - name: Upload packaged artifact
         uses: actions/upload-artifact@v4
         with:
@@ -131,13 +131,14 @@ jobs:
         with:
           path: ./artifacts
       - name: Attach GUI artifacts to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
+          overwrite_files: true
           files: |
-            artifacts/csv2ofx-gui-linux-x64-package/Csv2Ofx-${{ env.VERSION }}-linux-x64.AppImage
-            artifacts/csv2ofx-gui-osx-x64-package/Csv2Ofx-${{ env.VERSION }}-osx-x64.app.zip
-            artifacts/csv2ofx-gui-osx-arm64-package/Csv2Ofx-${{ env.VERSION }}-osx-arm64.app.zip
-            artifacts/csv2ofx-gui-win-x64-package/Csv2Ofx-${{ env.VERSION }}-win-x64.zip
+            artifacts/csv2ofx-gui-linux-x64-package/Csv2Ofx-Gui-${{ env.VERSION }}-linux-x64.AppImage
+            artifacts/csv2ofx-gui-osx-x64-package/Csv2Ofx-Gui-${{ env.VERSION }}-osx-x64.app.zip
+            artifacts/csv2ofx-gui-osx-arm64-package/Csv2Ofx-Gui-${{ env.VERSION }}-osx-arm64.app.zip
+            artifacts/csv2ofx-gui-win-x64-package/Csv2Ofx-Gui-${{ env.VERSION }}-win-x64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
