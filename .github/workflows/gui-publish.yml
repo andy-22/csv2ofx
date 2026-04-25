@@ -1,8 +1,6 @@
 name: GUI Publish
 
 on:
-#  push:
-#    tags: [ "v*" ]
   release:
     types: [ published ]
 
@@ -32,7 +30,7 @@ jobs:
 
   publish-gui:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: read
       actions: write
@@ -41,13 +39,21 @@ jobs:
       matrix:
         include:
           - rid: linux-x64
-            artifact: csv2ofx-gui-linux-x64
+            os: ubuntu-latest
+            package: appimage
+            artifact: csv2ofx-gui-linux-x64-package
           - rid: osx-x64
-            artifact: csv2ofx-gui-osx-x64
+            os: macos-latest
+            package: macos-app
+            artifact: csv2ofx-gui-osx-x64-package
           - rid: osx-arm64
-            artifact: csv2ofx-gui-osx-arm64
+            os: macos-latest
+            package: macos-app
+            artifact: csv2ofx-gui-osx-arm64-package
           - rid: win-x64
-            artifact: csv2ofx-gui-win-x64
+            os: ubuntu-latest
+            package: zip
+            artifact: csv2ofx-gui-win-x64-package
     steps:
       - uses: actions/checkout@v4
       - name: Setup .NET
@@ -75,21 +81,35 @@ jobs:
             -p:IncludeNativeLibrariesForSelfExtract=true \
             -p:EnableCompressionInSingleFile=true \
             -p:Version=${{ env.VERSION }} \
-            -o "artifacts/${{ matrix.artifact }}"
-      - name: Archive artifact
+            -o "artifacts/publish/${{ matrix.rid }}"
+      - name: Package Linux AppImage
+        if: matrix.package == 'appimage'
         run: |
-          cd artifacts
-          zip -r "${{ matrix.artifact }}-${{ env.VERSION }}.zip" "${{ matrix.artifact }}"
-      - name: Upload folder artifact
+          chmod +x build/package-linux-appimage.sh
+          build/package-linux-appimage.sh \
+            "artifacts/publish/${{ matrix.rid }}" \
+            "artifacts/packages" \
+            "${{ env.VERSION }}"
+      - name: Package macOS app bundle
+        if: matrix.package == 'macos-app'
+        run: |
+          chmod +x build/package-macos-app.sh
+          build/package-macos-app.sh \
+            "artifacts/publish/${{ matrix.rid }}" \
+            "artifacts/packages" \
+            "${{ matrix.rid }}" \
+            "${{ env.VERSION }}"
+      - name: Package Windows zip
+        if: matrix.package == 'zip'
+        run: |
+          mkdir -p artifacts/packages
+          cd artifacts/publish/${{ matrix.rid }}
+          zip -r ../../packages/Csv2Ofx-${{ env.VERSION }}-${{ matrix.rid }}.zip .
+      - name: Upload packaged artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: artifacts/${{ matrix.artifact }}/
-      - name: Upload zip artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}-zip
-          path: artifacts/${{ matrix.artifact }}-${{ env.VERSION }}.zip
+          path: artifacts/packages/*
 
   release:
     needs: publish-gui
@@ -115,9 +135,9 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            artifacts/csv2ofx-gui-linux-x64-zip/csv2ofx-gui-linux-x64-${{ env.VERSION }}.zip
-            artifacts/csv2ofx-gui-osx-x64-zip/csv2ofx-gui-osx-x64-${{ env.VERSION }}.zip
-            artifacts/csv2ofx-gui-osx-arm64-zip/csv2ofx-gui-osx-arm64-${{ env.VERSION }}.zip
-            artifacts/csv2ofx-gui-win-x64-zip/csv2ofx-gui-win-x64-${{ env.VERSION }}.zip
+            artifacts/csv2ofx-gui-linux-x64-package/Csv2Ofx-${{ env.VERSION }}-linux-x64.AppImage
+            artifacts/csv2ofx-gui-osx-x64-package/Csv2Ofx-${{ env.VERSION }}-osx-x64.app.zip
+            artifacts/csv2ofx-gui-osx-arm64-package/Csv2Ofx-${{ env.VERSION }}-osx-arm64.app.zip
+            artifacts/csv2ofx-gui-win-x64-package/Csv2Ofx-${{ env.VERSION }}-win-x64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
