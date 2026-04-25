@@ -15,7 +15,7 @@ APP_NAME="Csv2Ofx"
 EXECUTABLE="Csv2Ofx.Gui"
 BUNDLE_ID="com.csv2ofx.gui"
 APP_BUNDLE="$OUTPUT_DIR/$APP_NAME.app"
-ZIP_PATH="$OUTPUT_DIR/$APP_NAME-$VERSION-$RID.app.zip"
+ZIP_PATH="$OUTPUT_DIR/$APP_NAME-Gui-$VERSION-$RID.app.zip"
 
 rm -rf "$APP_BUNDLE" "$ZIP_PATH"
 mkdir -p "$APP_BUNDLE/Contents/MacOS" "$APP_BUNDLE/Contents/Resources"
