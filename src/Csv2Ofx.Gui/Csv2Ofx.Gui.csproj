@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CsvToOfx.Core\CsvToOfx.Core.csproj" />
+    <ProjectReference Include="..\CsvToOfx.Parsers\CsvToOfx.Parsers.csproj" />
+    <ProjectReference Include="..\CsvToOfx.Writers.Ofx\CsvToOfx.Writers.Ofx.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.0.1" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.1" />
+  </ItemGroup>
+
+</Project>
