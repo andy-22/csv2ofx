@@ -1,5 +1,6 @@
 using CsvHelper;
 using CsvHelper.Configuration;
+using CsvToOfx.Core.Models;
 using System.Globalization;
 
 namespace CsvToOfx.Parsers.Shared;
@@ -62,6 +63,56 @@ public sealed class CsvRowReader
         }
     }
 
+    public CsvReadResult? ReadRows(Stream csv, IEnumerable<HeaderMap> headerMaps)
+    {
+        using var reader = new StreamReader(csv);
+        using var csvr = new CsvReader(reader, _conf);
+
+        var candidates = headerMaps.ToList();
+        HeaderMap? matchedHeaderMap = null;
+        string[]? headerRecord = null;
+        var rows = new List<IDictionary<string, string?>>();
+        var seenData = false;
+
+        while (csvr.Read())
+        {
+            var record = csvr.Parser.Record;
+            if (record is null || record.Length == 0)
+                continue;
+
+            var nonEmpty = record.Count(v => !string.IsNullOrWhiteSpace(v));
+            if (nonEmpty == 0)
+            {
+                if (seenData)
+                    break;
+
+                continue;
+            }
+
+            if (matchedHeaderMap is null)
+            {
+                matchedHeaderMap = MatchHeader(record, candidates);
+                if (matchedHeaderMap is null)
+                    continue;
+
+                headerRecord = record.Select(v => v?.Trim() ?? string.Empty).ToArray();
+                continue;
+            }
+
+            if (headerRecord is null || record.Length < headerRecord.Length)
+                continue;
+
+            var converted = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+            for (var i = 0; i < headerRecord.Length; i++)
+                converted[headerRecord[i]] = i < record.Length ? record[i] : null;
+
+            seenData = true;
+            rows.Add(converted);
+        }
+
+        return matchedHeaderMap is null ? null : new CsvReadResult(matchedHeaderMap, rows);
+    }
+
     private static bool MatchesHeader(string[] record, HashSet<string>? requiredHeaders)
     {
         var normalized = record
@@ -76,5 +127,39 @@ public sealed class CsvRowReader
             return true;
 
         return requiredHeaders.IsSubsetOf(normalized);
+    }
+
+    private static HeaderMap? MatchHeader(string[] record, IReadOnlyCollection<HeaderMap> headerMaps)
+    {
+        var normalized = record
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Select(v => v.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (normalized.Count == 0)
+            return null;
+
+        HeaderMap? bestMatch = null;
+        var bestScore = -1;
+
+        foreach (var headerMap in headerMaps)
+        {
+            var matchedFields = headerMap.Columns
+                .Where(entry => normalized.Contains(entry.Key))
+                .Select(entry => entry.Value)
+                .ToHashSet();
+
+            if (!headerMap.EffectiveRequiredFields.All(matchedFields.Contains))
+                continue;
+
+            var score = matchedFields.Count;
+            if (score <= bestScore)
+                continue;
+
+            bestMatch = headerMap;
+            bestScore = score;
+        }
+
+        return bestMatch;
     }
 }
