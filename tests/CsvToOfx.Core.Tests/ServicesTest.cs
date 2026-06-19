@@ -35,6 +35,15 @@ public class AmountParserTests
         Action act = () => _parser.ParseAbsOrNull("invalid");
         act.Should().Throw<FormatException>();
     }
+
+    [Theory]
+    [InlineData("1,234.56", 1234.56)]
+    [InlineData("-78.90", -78.90)]
+    [InlineData("100", 100.0)]
+    public void ParseSignedOrNull_PreservesSign_ForValidStrings(string input, decimal expected)
+    {
+        _parser.ParseSignedOrNull(input).Should().Be(expected);
+    }
 }
 
 public class DateParserTests

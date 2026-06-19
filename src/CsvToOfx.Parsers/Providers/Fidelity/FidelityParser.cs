@@ -35,6 +35,9 @@ public sealed class FidelityParser : IStatementParser
             var nonEmpty = row.Values.Count(v => !string.IsNullOrWhiteSpace(v));
             if (nonEmpty <= 1) continue;
 
+            if (ShouldSkipSyntheticSweepReinvestment(row, columnsByField))
+                continue;
+
             // date filter
             var dt = ctx.DateParser.ParseOrNull(Get(row, columnsByField, CanonicalField.TradeDate));
             if (ctx.StartDateFilter.HasValue && dt.HasValue && dt.Value < ctx.StartDateFilter.Value) continue;
@@ -65,7 +68,7 @@ public sealed class FidelityParser : IStatementParser
 
             var units = TryParseDecimal(Get(row, columnsByField, CanonicalField.Quantity));
             var unitPrice = TryParseDecimal(Get(row, columnsByField, CanonicalField.Price));
-            var amount = ctx.AmountParser.ParseAbsOrNull(Get(row, columnsByField, CanonicalField.Amount)) ?? 0m;
+            var amount = ParseAmount(ctx, action, row, columnsByField);
             var memo = BuildMemo(action, row, columnsByField);
             var fees = TryParseDecimal(Get(row, columnsByField, CanonicalField.Fees));
             var currency = (Get(row, columnsByField, CanonicalField.Currency) ?? ctx.CurrencyDefault).Trim();
@@ -112,6 +115,40 @@ public sealed class FidelityParser : IStatementParser
 
     private static decimal? TryParseDecimal(string? s)
         => decimal.TryParse((s ?? "").Replace(",", ""), out var v) ? v : null;
+
+    private static decimal ParseAmount(
+        ParserContext ctx,
+        CanonicalAction action,
+        IDictionary<string, string?> row,
+        IReadOnlyDictionary<CanonicalField, string> columnsByField)
+    {
+        var rawAmount = Get(row, columnsByField, CanonicalField.Amount);
+        var amount = action == CanonicalAction.CashTransfer
+            ? ctx.AmountParser.ParseSignedOrNull(rawAmount)
+            : ctx.AmountParser.ParseAbsOrNull(rawAmount);
+
+        return amount ?? 0m;
+    }
+
+    private static bool ShouldSkipSyntheticSweepReinvestment(
+        IDictionary<string, string?> row,
+        IReadOnlyDictionary<CanonicalField, string> columnsByField)
+    {
+        var action = (Get(row, columnsByField, CanonicalField.Action) ?? "").Trim();
+        if (!action.Contains("reinvestment", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var symbol = (Get(row, columnsByField, CanonicalField.Symbol) ?? "").Trim();
+        if (!FidelityCorePositionSymbols.Contains(symbol))
+            return false;
+
+        var type = (Get(row, columnsByField, CanonicalField.Type) ?? "").Trim();
+        var description = (Get(row, columnsByField, CanonicalField.Description) ?? "").Trim();
+
+        return type.Contains("cash", StringComparison.OrdinalIgnoreCase)
+            || description.Contains("money market", StringComparison.OrdinalIgnoreCase)
+            || description.Contains("core", StringComparison.OrdinalIgnoreCase);
+    }
 
     private static string? BuildMemo(
         CanonicalAction action,
