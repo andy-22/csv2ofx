@@ -17,6 +17,11 @@ public sealed class FidelityParser : IStatementParser
         FidelityIraHeaderMap.Instance
     };
 
+    private static readonly HashSet<string> CorePositionSymbols = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "SPAXX"
+    };
+
     public ParseResult Parse(RawStatement input, ParserContext ctx)
     {
         var reader = new CsvRowReader();
@@ -139,7 +144,7 @@ public sealed class FidelityParser : IStatementParser
             return false;
 
         var symbol = (Get(row, columnsByField, CanonicalField.Symbol) ?? "").Trim();
-        if (!FidelityCorePositionSymbols.Contains(symbol))
+        if (string.IsNullOrWhiteSpace(symbol) || !CorePositionSymbols.Contains(symbol))
             return false;
 
         var type = (Get(row, columnsByField, CanonicalField.Type) ?? "").Trim();

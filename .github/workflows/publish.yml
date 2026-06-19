@@ -21,7 +21,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Set version
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == v* ]]; then
@@ -51,7 +51,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Set version
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == v* ]]; then
@@ -61,21 +61,21 @@ jobs:
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
       - name: Publish self-contained single file
-        run: dotnet publish src/CsvToOfx.Cli/CsvToOfx.Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true --framework net8.0 /p:PublishSingleFile=true /p:IncludeAllContentForSelfExtract=true /p:Version=${{ env.VERSION }}
+        run: dotnet publish src/CsvToOfx.Cli/CsvToOfx.Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true --framework net10.0 /p:PublishSingleFile=true /p:IncludeAllContentForSelfExtract=true /p:Version=${{ env.VERSION }}
       - name: Archive artifact
         run: |
-          cd src/CsvToOfx.Cli/bin/Release/net8.0/${{ matrix.rid }}/publish
-          zip -r ../../Csv2Ofx-Cli-${{ env.VERSION }}-${{ matrix.rid }}.zip .
+          cd src/CsvToOfx.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish
+          zip -r ../../csv2ofx-${{ env.VERSION }}-${{ matrix.rid }}.zip .
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: csv2ofx-cli-${{ matrix.rid }}
-          path: src/CsvToOfx.Cli/bin/Release/net8.0/${{ matrix.rid }}/publish/
+          name: csv2ofx-${{ matrix.rid }}
+          path: src/CsvToOfx.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish/
       - name: Upload release zip
         uses: actions/upload-artifact@v4
         with:
-          name: csv2ofx-cli-zip-${{ matrix.rid }}
-          path: src/CsvToOfx.Cli/bin/Release/net8.0/Csv2Ofx-Cli-${{ env.VERSION }}-${{ matrix.rid }}.zip
+          name: csv2ofx-zip-${{ matrix.rid }}
+          path: src/CsvToOfx.Cli/bin/Release/net10.0/csv2ofx-${{ env.VERSION }}-${{ matrix.rid }}.zip
 
   release:
     needs: publish
@@ -97,14 +97,13 @@ jobs:
         with:
           path: ./artifacts
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v1
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-          overwrite_files: true
           files: |
-            artifacts/csv2ofx-cli-zip-linux-x64/Csv2Ofx-Cli-${{ env.VERSION }}-linux-x64.zip
-            artifacts/csv2ofx-cli-zip-osx-x64/Csv2Ofx-Cli-${{ env.VERSION }}-osx-x64.zip
-            artifacts/csv2ofx-cli-zip-win-x64/Csv2Ofx-Cli-${{ env.VERSION }}-win-x64.zip
+            artifacts/csv2ofx-zip-linux-x64/csv2ofx-${{ env.VERSION }}-linux-x64.zip
+            artifacts/csv2ofx-zip-osx-x64/csv2ofx-${{ env.VERSION }}-osx-x64.zip
+            artifacts/csv2ofx-zip-win-x64/csv2ofx-${{ env.VERSION }}-win-x64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
