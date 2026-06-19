@@ -3,7 +3,7 @@
   <PropertyGroup>
     <AssemblyName>Csv2Ofx.Gui</AssemblyName>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RuntimeIdentifiers>linux-x64;osx-x64;osx-arm64;win-x64</RuntimeIdentifiers>
     <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>

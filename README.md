@@ -32,7 +32,7 @@ The current CLI is focused on Fidelity brokerage CSV files and emits OFX 2.1.1 s
 
 ## Requirements
 
-- .NET 8 SDK
+- .NET 10 SDK
 
 ## Build
 
