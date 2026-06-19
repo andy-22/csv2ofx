@@ -21,7 +21,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Set version
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == v* ]]; then
@@ -51,7 +51,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Set version
         run: |
           if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" == v* ]]; then
@@ -61,21 +61,21 @@ jobs:
           fi
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
       - name: Publish self-contained single file
-        run: dotnet publish src/CsvToOfx.Cli/CsvToOfx.Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true --framework net8.0 /p:PublishSingleFile=true /p:IncludeAllContentForSelfExtract=true /p:Version=${{ env.VERSION }}
+        run: dotnet publish src/CsvToOfx.Cli/CsvToOfx.Cli.csproj -c Release -r ${{ matrix.rid }} --self-contained true --framework net10.0 /p:PublishSingleFile=true /p:IncludeAllContentForSelfExtract=true /p:Version=${{ env.VERSION }}
       - name: Archive artifact
         run: |
-          cd src/CsvToOfx.Cli/bin/Release/net8.0/${{ matrix.rid }}/publish
+          cd src/CsvToOfx.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish
           zip -r ../../csv2ofx-${{ env.VERSION }}-${{ matrix.rid }}.zip .
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: csv2ofx-${{ matrix.rid }}
-          path: src/CsvToOfx.Cli/bin/Release/net8.0/${{ matrix.rid }}/publish/
+          path: src/CsvToOfx.Cli/bin/Release/net10.0/${{ matrix.rid }}/publish/
       - name: Upload release zip
         uses: actions/upload-artifact@v4
         with:
           name: csv2ofx-zip-${{ matrix.rid }}
-          path: src/CsvToOfx.Cli/bin/Release/net8.0/csv2ofx-${{ env.VERSION }}-${{ matrix.rid }}.zip
+          path: src/CsvToOfx.Cli/bin/Release/net10.0/csv2ofx-${{ env.VERSION }}-${{ matrix.rid }}.zip
 
   release:
     needs: publish

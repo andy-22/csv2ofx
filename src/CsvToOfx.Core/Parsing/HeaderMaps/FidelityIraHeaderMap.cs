@@ -6,6 +6,18 @@ namespace CsvToOfx.Core.Parsing.HeaderMaps;
 
 public static class FidelityIraHeaderMap
 {
+    private static readonly CanonicalField[] RequiredFields =
+    {
+        CanonicalField.TradeDate,
+        CanonicalField.Action,
+        CanonicalField.Symbol,
+        CanonicalField.Description,
+        CanonicalField.Price,
+        CanonicalField.Quantity,
+        CanonicalField.Fees,
+        CanonicalField.Amount
+    };
+
     public static HeaderMap Instance { get; } = new HeaderMap(
         "Fidelity-IRA",
         new Dictionary<string, CanonicalField>(StringComparer.OrdinalIgnoreCase)
@@ -23,6 +35,6 @@ public static class FidelityIraHeaderMap
             ["Amount ($)"] = CanonicalField.Amount,
             ["Cash Balance ($)"] = CanonicalField.CashBalance,
             ["Settlement Date"] = CanonicalField.SettlementDate
-        });
+        },
+        RequiredFields);
 }
-
